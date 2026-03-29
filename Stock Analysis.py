@@ -10,8 +10,10 @@ import pandas as pd
 import streamlit as st
 import io, sys
 
+# Hide TensorFlow info logs
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"
 
+# Try importing ML libraries
 ML_AVAILABLE = True
 try:
     import tensorflow as tf
@@ -21,6 +23,7 @@ try:
     from sklearn.metrics import mean_squared_error, r2_score
 except ImportError:
     ML_AVAILABLE = False
+    print("⚠ TensorFlow / scikit-learn not installed. Neural network features disabled.")
 
 # -------------------------------
 # Helper function to build LSTM
@@ -47,12 +50,17 @@ def run_analysis(T, prd, p1, p2, seq_len, test_ratio, epochs, batch_size, future
         date1y = dt.date.today() - relativedelta(years=1) + relativedelta(days=1)
         print(date1y.strftime("%d-%m-%y"), "to", date_str_end)
 
+        # Download stock data
         D = yf.download(T, period=prd, progress=False)
+        if D is None or D.empty:
+            raise ValueError("No data downloaded. Check ticker symbol and internet connection.")
 
         if "Close" in D.columns:
             close_series = D["Close"]
         elif ("Close", T) in D.columns:
             close_series = D[("Close", T)]
+        else:
+            raise KeyError("Could not find 'Close' prices in downloaded data.")
 
         CL = close_series.squeeze().tolist()
         xCL = [i + 1 for i in range(len(CL))]
@@ -66,7 +74,7 @@ def run_analysis(T, prd, p1, p2, seq_len, test_ratio, epochs, batch_size, future
             y2.append(s.mean(CL[i - p2 : i]))
             x2.append(i)
 
-        # ---------------- Plot Moving Averages ----------------
+        # Plot Moving Averages
         plt.figure(figsize=(8, 4))
         plt.plot(xCL, CL, color="blue", label="Closing Price")
         if y1:
@@ -81,7 +89,7 @@ def run_analysis(T, prd, p1, p2, seq_len, test_ratio, epochs, batch_size, future
         plt.grid(True)
         tab1.pyplot(plt)
 
-        # ---------------- LSTM ----------------
+        # Neural network part
         if ML_AVAILABLE:
             prices = np.array(CL).reshape(-1, 1)
             scaler = MinMaxScaler((0, 1))
@@ -106,7 +114,7 @@ def run_analysis(T, prd, p1, p2, seq_len, test_ratio, epochs, batch_size, future
             pred_test = scaler.inverse_transform(model.predict(X_test))
             y_test_inv = scaler.inverse_transform(y_test.reshape(-1, 1))
 
-            # ---------------- Plot Test Predictions ----------------
+            # Plot Test predictions
             plt.figure(figsize=(8, 4))
             plt.plot(range(len(CL)), CL, color="blue", label="Historical")
             start_idx = len(CL) - len(y_test_inv)
@@ -134,7 +142,7 @@ def run_analysis(T, prd, p1, p2, seq_len, test_ratio, epochs, batch_size, future
                 np.array(future_predictions).reshape(-1, 1)
             )
 
-            # ---------------- Future Plot ----------------
+            # Future Plot
             plt.figure(figsize=(8, 4))
             plt.plot(range(len(CL)), CL, label="Historical Price")
             future_x = range(len(CL), len(CL) + future_days)
@@ -144,16 +152,20 @@ def run_analysis(T, prd, p1, p2, seq_len, test_ratio, epochs, batch_size, future
             plt.xlabel("Day Number")
             plt.ylabel("Price")
             plt.grid(True)
-            tab2.pyplot(plt)
+            tab5.pyplot(plt)
 
             # Metrics
             rmse = np.sqrt(mean_squared_error(y_test_inv, pred_test))
             r2 = r2_score(y_test_inv, pred_test)
             accuracy = max(0, r2) * 100
 
-            tab3.write(f"📌 Accuracy: {accuracy:.2f}%")
+            tab3.write(f"💰 3 Year Trend Profit per share: Calculated from MA cross strategy")
+            tab3.write(f"✅ Accuracy: {accuracy:.2f}%")
             tab3.write(f"📌 RMSE: {rmse:.2f}")
             tab3.write(f"📌 R² Score: {r2:.3f}")
+
+        else:
+            print("⚠ Skipping neural network part (TensorFlow not installed).")
 
     except Exception as e:
         print("Error occurred:", e)
@@ -162,12 +174,13 @@ def run_analysis(T, prd, p1, p2, seq_len, test_ratio, epochs, batch_size, future
     return logs.getvalue()
 
 # -------------------------------
-# Streamlit UI
+# Streamlit Web App UI
 # -------------------------------
 st.set_page_config(page_title="📈 Stock Analyzer", page_icon="📊", layout="wide")
 
 st.title("📈 Stock Analyzer")
 
+# Sidebar inputs
 st.sidebar.header("⚙️ Parameters")
 labels = ["Ticker", "Period", "MA-1", "MA-2", "Seq Len", "Test Ratio", "Epochs", "Batch Size", "Future Days"]
 defaults = ["TSLA", "3y", "50", "200", "30", "0.2", "25", "16", "10"]
@@ -175,8 +188,9 @@ entries = {}
 for lbl, dft in zip(labels, defaults):
     entries[lbl] = st.sidebar.text_input(lbl, dft)
 
+# Tabs
 tab1, tab2, tab3, tab4, tab5 = st.tabs(
-    ["📊 Moving Averages", "🤖 LSTM Predictions", "🔮 Future Prediction", "💰 Profit & Accuracy", "📜 Logs"]
+    ["📊 Moving Averages", "🤖 LSTM Predictions", "💰 Profit & Accuracy", "📜 Logs", "🔮 Future Prediction"]
 )
 
 if st.button("🚀 Run Analysis"):
