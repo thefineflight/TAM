@@ -176,27 +176,6 @@ def run_analysis(T, prd, p1, p2, seq_len, test_ratio, epochs, batch_size):
         
         tab1.pyplot(fig)
 
-        # -----------------------------
-        # Plot 1: Moving averages
-        # -----------------------------
-        plt.figure(figsize=(8, 4))
-        plt.plot(xCL, CL, color="blue", label="Closing Price")
-        if y1:
-            plt.plot(x1, y1, color="r", label=f"MA - {p1} Days")
-        if y2:
-            plt.plot(x2, y2, color="g", label=f"MA - {p2} Days")
-        if gx:
-            plt.scatter(gx, gy, marker="^", facecolor="green", label="Golden Cross", s=40, zorder=10)
-        if dx:
-            plt.scatter(dx, dy, marker="v", facecolor="black", label="Death Cross", s=40, zorder=10)
-
-        plt.legend()
-        plt.xlabel(f"Day count from {date1y}")
-        plt.ylabel("Price")
-        plt.title(f"{T} | MA({p1},{p2}) | upto {date_str_end}")
-        plt.grid(True)
-        tab1.pyplot(plt)
-
         # Profit Calculation
         by, sl = [], []
         sby, ssl = 0, 0
