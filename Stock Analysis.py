@@ -175,8 +175,8 @@ entries = {}
 for lbl, dft in zip(labels, defaults):
     entries[lbl] = st.sidebar.text_input(lbl, dft)
 
-tab1, tab2, tab3, tab4 = st.tabs(
-    ["📊 Moving Averages", "🤖 LSTM Predictions", "💰 Profit & Accuracy", "📜 Logs"]
+tab1, tab2, tab3, tab4, tab5 = st.tabs(
+    ["📊 Moving Averages", "🤖 LSTM Predictions", "🔮 Future Prediction", "💰 Profit & Accuracy", "📜 Logs"]
 )
 
 if st.button("🚀 Run Analysis"):
