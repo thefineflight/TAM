@@ -95,6 +95,88 @@ def run_analysis(T, prd, p1, p2, seq_len, test_ratio, epochs, batch_size):
         dx, dy = (list(x) for x in zip(*d_cr)) if d_cr else ([], [])
 
         # -----------------------------
+        # Full Technical Analysis Graph
+        # -----------------------------
+        
+        # RSI
+        rsi_period = 14
+        delta = pd.Series(CL).diff()
+        gain = delta.clip(lower=0)
+        loss = -delta.clip(upper=0)
+        avg_gain = gain.ewm(alpha=1/rsi_period, adjust=False).mean()
+        avg_loss = loss.ewm(alpha=1/rsi_period, adjust=False).mean()
+        rs = avg_gain / avg_loss
+        rsi = 100 - (100 / (1 + rs))
+        
+        # MACD
+        ema12 = pd.Series(CL).ewm(span=12, adjust=False).mean()
+        ema26 = pd.Series(CL).ewm(span=26, adjust=False).mean()
+        macd = ema12 - ema26
+        signal = macd.ewm(span=9, adjust=False).mean()
+        hist = macd - signal
+        
+        # Bollinger Bands
+        bb_mid = pd.Series(CL).rolling(20).mean()
+        bb_std = pd.Series(CL).rolling(20).std()
+        bb_upper = bb_mid + 2 * bb_std
+        bb_lower = bb_mid - 2 * bb_std
+        
+        # Plot full dashboard
+        fig, (ax1, ax2, ax3) = plt.subplots(
+            3, 1, figsize=(12, 8), sharex=True,
+            gridspec_kw={'height_ratios': [3, 1, 1]}
+        )
+        
+        # Price + MA + BB
+        ax1.plot(xCL, CL, color="blue", label="Closing Price")
+        if y1:
+            ax1.plot(x1, y1, color="r", label=f"MA - {p1}")
+        if y2:
+            ax1.plot(x2, y2, color="g", label=f"MA - {p2}")
+        
+        ax1.plot(xCL, bb_upper, linestyle="--", label="BB Upper")
+        ax1.plot(xCL, bb_mid, linestyle="--", label="BB Mid")
+        ax1.plot(xCL, bb_lower, linestyle="--", label="BB Lower")
+        ax1.fill_between(xCL, bb_lower, bb_upper, alpha=0.1)
+        
+        # Crossovers
+        if gx:
+            ax1.scatter(gx, gy, marker="^", color="green", s=40)
+        if dx:
+            ax1.scatter(dx, dy, marker="v", color="red", s=40)
+        
+        # Vertical crossover lines
+        for x in gx:
+            for ax in [ax1, ax2, ax3]:
+                ax.axvline(x=x, color='green', linestyle='--', linewidth=1, alpha=0.5)
+        
+        for x in dx:
+            for ax in [ax1, ax2, ax3]:
+                ax.axvline(x=x, color='red', linestyle='--', linewidth=1, alpha=0.5)
+        
+        ax1.set_ylabel("Price")
+        ax1.legend()
+        
+        # RSI
+        ax2.plot(xCL, rsi, color="purple")
+        ax2.axhline(70, linestyle="--")
+        ax2.axhline(30, linestyle="--")
+        ax2.set_ylabel("RSI")
+        
+        # MACD
+        colors = ['green' if h >= 0 else 'red' for h in hist]
+        ax3.bar(xCL, hist, alpha=0.3, color=colors)
+        ax3.plot(xCL, macd, label="MACD")
+        ax3.plot(xCL, signal, label="Signal")
+        ax3.set_ylabel("MACD")
+        ax3.legend()
+        
+        plt.xlabel(f"Day count from {date1y}")
+        plt.tight_layout()
+        
+        tab1.pyplot(fig)
+
+        # -----------------------------
         # Plot 1: Moving averages
         # -----------------------------
         plt.figure(figsize=(8, 4))
