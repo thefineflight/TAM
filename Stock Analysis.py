@@ -141,9 +141,9 @@ def run_analysis(T, prd, p1, p2, seq_len, test_ratio, epochs, batch_size):
         
         # Crossovers
         if gx:
-            ax1.scatter(gx, gy, marker="^", color="green", zorder=3, s=50)
+            ax1.scatter(gx, gy, marker="^", color="green", zorder=3, s=70)
         if dx:
-            ax1.scatter(dx, dy, marker="v", color="red", zorder=3, s=50)
+            ax1.scatter(dx, dy, marker="v", color="red", zorder=3, s=70)
         
         # Vertical crossover lines
         for x in gx:
