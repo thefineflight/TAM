@@ -47,7 +47,7 @@ def run_analysis(T, prd, p1, p2, seq_len, test_ratio, epochs, batch_size):
     try:
         date_end = dt.date.today() - relativedelta(days=1)
         date_str_end = date_end.strftime("%d-%m-%y")
-        start_date = D.index[0].date()
+        date1y = dt.date.today() - relativedelta(years=1) + relativedelta(days=1)
         print(date1y.strftime("%d-%m-%y"), "to", date_str_end)
 
         # Download stock data
@@ -171,7 +171,7 @@ def run_analysis(T, prd, p1, p2, seq_len, test_ratio, epochs, batch_size):
         ax3.set_ylabel("MACD")
         ax3.legend()
         
-        plt.xlabel(f"Day count from {start_date}")
+        plt.xlabel(f"Day count from {date1y}")
         plt.tight_layout()
         
         tab1.pyplot(fig)
@@ -224,7 +224,7 @@ def run_analysis(T, prd, p1, p2, seq_len, test_ratio, epochs, batch_size):
             plt.plot(range(start_idx, len(CL)), pred_test, color="green", label="Predicted data")
             plt.legend()
             plt.title(f"{T} | LSTM Test Predictions")
-            plt.xlabel(f"Day count from {start_date}")
+            plt.xlabel(f"Day count from {date1y}")
             plt.ylabel("Price")
             plt.grid(True)
             tab2.pyplot(plt)
@@ -306,6 +306,5 @@ if st.button("🚀 Run Analysis"):
             int(entries["Batch Size"])
         )
     tab4.text(logs)
-
 
 
