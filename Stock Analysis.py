@@ -171,7 +171,7 @@ def run_analysis(T, prd, p1, p2, seq_len, test_ratio, epochs, batch_size):
         ax3.set_ylabel("MACD")
         ax3.legend()
         
-        plt.xlabel(f"Day count from {date1y}")
+        plt.xlabel(f"Day count from 31-03-2023")
         plt.tight_layout()
         
         tab1.pyplot(fig)
@@ -224,7 +224,7 @@ def run_analysis(T, prd, p1, p2, seq_len, test_ratio, epochs, batch_size):
             plt.plot(range(start_idx, len(CL)), pred_test, color="green", label="Predicted data")
             plt.legend()
             plt.title(f"{T} | LSTM Test Predictions")
-            plt.xlabel(f"Day count from {date1y}")
+            plt.xlabel(f"Day count from 31-03-2023")
             plt.ylabel("Price")
             plt.grid(True)
             tab2.pyplot(plt)
